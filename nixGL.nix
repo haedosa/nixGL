@@ -70,16 +70,16 @@ let
     nvidiaPackages = { version, sha256 ? null }: rec {
       nvidiaDrivers = (linuxPackages.nvidia_x11.override { }).overrideAttrs
         (oldAttrs: rec {
-          pname = "nvidia";
-          name = "nvidia-x11-${version}-nixGL";
-          inherit version;
-          src = let
-            url =
-              "https://download.nvidia.com/XFree86/Linux-x86_64/${version}/NVIDIA-Linux-x86_64-${version}.run";
-          in if sha256 != null then
-            fetchurl { inherit url sha256; }
-          else
-            builtins.fetchurl url;
+          # pname = "nvidia";
+          # name = "nvidia-x11-${version}-nixGL";
+          # inherit version;
+          # src = let
+          #   url =
+          #     "https://download.nvidia.com/XFree86/Linux-x86_64/${version}/NVIDIA-Linux-x86_64-${version}.run";
+          # in if sha256 != null then
+          #   fetchurl { inherit url sha256; }
+          # else
+          #   builtins.fetchurl url;
           useGLVND = true;
         });
 

@@ -2,27 +2,34 @@
   description = "A wrapper tool for nix OpenGL applications";
 
   inputs.flake-utils.url = "github:numtide/flake-utils";
-  inputs.nixpkgs.url = "github:nixos/nixpkgs";
+  # this commit of nixpkgs set the nvidiaVersion to "535.86.05";
+  inputs.nixpkgs.url = "github:nixos/nixpkgs/9a74ffb2ca1fc91c6ccc48bd3f8cbc1501bf7b8a";
 
   outputs = { self, nixpkgs, flake-utils }:
     (flake-utils.lib.eachDefaultSystem (system:
       let
         isIntelX86Platform = system == "x86_64-linux";
-        pkgs = import ./default.nix {
-          pkgs = nixpkgs.legacyPackages.${system};
-          enable32bits = isIntelX86Platform;
-          enableIntelX86Extensions = isIntelX86Platform;
+        pkgs = import nixpkgs {
+          inherit system;
+          config = {allowUnfree = true;};
+          overlays = [];
         };
+
+        nixgl = pkgs.recurseIntoAttrs (pkgs.callPackage ./nixGL.nix {
+          enable32bits = isIntelX86Platform;
+          nvidiaVersion = "535.86.05";
+        });
       in rec {
 
-        packages = {
-          # makes it easy to use "nix run nixGL --impure -- program"
-          default = pkgs.auto.nixGLDefault;
+        inherit nixgl;
 
-          nixGLDefault = pkgs.auto.nixGLDefault;
-          nixGLNvidia = pkgs.auto.nixGLNvidia;
-          nixGLNvidiaBumblebee = pkgs.auto.nixGLNvidiaBumblebee;
-          nixGLIntel = pkgs.nixGLIntel;
+        packages = {
+
+          default = nixgl.nixGLCommon nixgl.nixGLNvidia;
+          nixGLDefault = nixgl.nixGLCommon nixgl.nixGLNvidia;
+          nixGLNvidia = nixgl.nixGLNvidia;
+          nixGLNvidiaBumblebee = nixgl.nixGLNvidiaBumblebee;
+          nixGLIntel = nixgl.nixGLIntel;
           nixVulkanNvidia = pkgs.auto.nixVulkanNvidia;
           nixVulkanIntel = pkgs.nixVulkanIntel;
         };
@@ -39,6 +46,7 @@
               pkgs = final;
               enable32bits = isIntelX86Platform;
               enableIntelX86Extensions = isIntelX86Platform;
+              nvidiaVersion = "535.86.05";
             };
           };
       };
